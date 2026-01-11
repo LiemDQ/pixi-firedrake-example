@@ -9,7 +9,9 @@ platforms = ["linux-64", "osx-arm64"]
 python = ">=3.11,<3.14"
 pip = "*"
 
-# Firedrake build toolchain feature
+# Requirements to build PETSc (and Firedrake). Unlike PETSc, ABI compatibility
+# for these dependencies isn't needed, so pre-compiled binaries from Conda packages 
+# are acceptable.
 [feature.firedrake-build.dependencies]
 git = "*"
 cmake = "*"
@@ -30,28 +32,28 @@ zlib = "*"
 [feature.firedrake-build.tasks]
 get-configure = "curl -o $CONDA_PREFIX/firedrake-configure https://raw.githubusercontent.com/firedrakeproject/firedrake/release/scripts/firedrake-configure"
 
-clone-petsc = { cmd = "bash scripts/clone-petsc.sh", depends-on = ["get-configure"] }
+_clone-petsc = { cmd = "bash scripts/clone-petsc.sh", depends-on = ["get-configure"] }
 
 check = "firedrake-check"
 
-[feature.firedrake-build.tasks.build-petsc]
+[feature.firedrake-build.tasks._build-petsc]
 args = [
   { arg = "arch", default = "default" },
   { arg = "extras", default = "" },
   { arg = "petsc_opts", default = "" },
 ]
-cmd = "bash scripts/build-petsc.sh {{ arch }} {{ extras }} {{ petsc_opts }}"
-depends-on = ["clone-petsc"]
+cmd = "bash scripts/build-petsc.sh {{ arch }} \"{{ extras }}\" \"{{ petsc_opts }}\""
+depends-on = ["_clone-petsc"]
 
-[feature.firedrake-build.tasks.install-firedrake]
+[feature.firedrake-build.tasks._install-firedrake]
 args = [
   { arg = "arch", default = "default" },
   { arg = "extras", default = "" },
   { arg = "petsc_opts", default = "" },
 ]
-cmd = "bash scripts/install-firedrake.sh {{ arch }} {{ extras }}"
+cmd = "bash scripts/install-firedrake.sh {{ arch }} \"{{ extras }}\""
 depends-on = [
-  {task = "build-petsc", args = ["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]},
+  {task = "_build-petsc", args = ["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]},
 ]
 
 [feature.firedrake-build.tasks.setup]
@@ -61,7 +63,7 @@ args = [
   { arg = "petsc_opts", default = "" },
 ]
 depends-on = [
-  {task= "install-firedrake", args=["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]}
+  {task= "_install-firedrake", args=["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]}
 ]
 
 [feature.firedrake-build.activation]

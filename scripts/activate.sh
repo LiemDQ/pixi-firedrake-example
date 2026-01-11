@@ -2,17 +2,18 @@
 
 # PETSc configuration
 export PETSC_DIR="$CONDA_PREFIX/petsc"
-export PETSC_ARCH="arch-firedrake-default"
 
-# Auto-detect PETSC_ARCH: prefer complex if it exists, otherwise default
-if [ -d "$PETSC_DIR/arch-firedrake-complex" ]; then
-    export PETSC_ARCH="arch-firedrake-complex"
-else
-    export PETSC_ARCH="arch-firedrake-default"
+# Auto-detect PETSC_ARCH only if not already set (allows override by build scripts)
+if [ -z "$PETSC_ARCH" ]; then
+    if [ -d "$PETSC_DIR/arch-firedrake-complex" ]; then
+        export PETSC_ARCH="arch-firedrake-complex"
+    else
+        export PETSC_ARCH="arch-firedrake-default"
+    fi
 fi
 
 # SLEPc support (auto-detect if installed)
-if [ -d "$PETSC_DIR/$PETSC_ARCH/lib/libslepc.so" ] || [ -d "$PETSC_DIR/$PETSC_ARCH/lib/libslepc.dylib" ]; then
+if [ -e "$PETSC_DIR/$PETSC_ARCH/lib/libslepc.so" ] || [ -e "$PETSC_DIR/$PETSC_ARCH/lib/libslepc.dylib" ]; then
     export SLEPC_DIR="$PETSC_DIR/$PETSC_ARCH"
 fi
 

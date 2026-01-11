@@ -1,11 +1,13 @@
 #!/bin/bash
 set -e
 
-ARCH_TYPE="$1" #"${PETSC_ARCH_TYPE:-default}"
+#"default" or "complex" 
+ARCH_TYPE="$1" 
 
-FIREDRAKE_EXTRAS="$2" #${PETSC_SLEPC:-false}"
+# Firedrake installation options.
+FIREDRAKE_EXTRAS="$2" 
 
-# Additional PEtSc configuration flags.
+# Additional PETSc configuration flags.
 PETSC_EXTRAS="$3"
 
 # Determine PETSC_ARCH based on arch type

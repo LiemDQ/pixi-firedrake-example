@@ -2,15 +2,19 @@
 set -e
 
 # Configuration from environment (set by pixi task)
-ARCH_TYPE="$1" #"${PETSC_ARCH_TYPE:-default}"
-EXTRAS="$2" #"${PETSC_SLEPC:-false}"
+ARCH_TYPE="$1"
+EXTRAS="$2" 
 
-# Determine PETSC_ARCH
+# Determine and export PETSC_ARCH before sourcing activate.sh
 if [ "$ARCH_TYPE" = "complex" ]; then
-    PETSC_ARCH="arch-firedrake-complex"
+    export PETSC_ARCH="arch-firedrake-complex"
 else
-    PETSC_ARCH="arch-firedrake-default"
+    export PETSC_ARCH="arch-firedrake-default"
 fi
+
+# Re-source activate.sh to pick up correct HDF5_DIR, LD_LIBRARY_PATH, etc.
+# (activate.sh respects pre-set PETSC_ARCH and won't override it)
+source "$(dirname "$0")/activate.sh"
 
 # Build the extras string for pip
 # Start with "check" as base
@@ -24,6 +28,11 @@ fi
 # Add slepc if requested
 if [[ $EXTRAS_LIST == *"slepc"* ]]; then
     export SLEPC_DIR="$CONDA_PREFIX/petsc/$PETSC_ARCH"
+fi
+
+PIP_FLAGS=""
+if [[ $EXTRAS_LIST == *"torch"* ]]; then
+    PIP_FLAGS="--extra-index-url https://download.pytorch.org/whl/cpu $PIP_FLAGS"
 fi
 
 echo "Installing Firedrake with extras: [$EXTRAS_LIST]"
