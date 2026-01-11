@@ -1,0 +1,72 @@
+# pixi.toml
+[workspace]
+name = "pixi-firedrake-example"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+# Base dependencies (always included)
+[dependencies]
+python = ">=3.11,<3.14"
+pip = "*"
+
+# Firedrake build toolchain feature
+[feature.firedrake-build.dependencies]
+git = "*"
+cmake = "*"
+ninja = "*"
+pkg-config = "*"
+make = "*"
+curl = "*"
+flex = "*"
+bison = "*"
+c-compiler = "*"
+cxx-compiler = "*"
+fortran-compiler = "*"
+openmpi = "*"
+libblas = "*"
+liblapack = "*"
+zlib = "*"
+
+[feature.firedrake-build.tasks]
+get-configure = "curl -o $CONDA_PREFIX/firedrake-configure https://raw.githubusercontent.com/firedrakeproject/firedrake/release/scripts/firedrake-configure"
+
+clone-petsc = { cmd = "bash scripts/clone-petsc.sh", depends-on = ["get-configure"] }
+
+check = "firedrake-check"
+
+[feature.firedrake-build.tasks.build-petsc]
+args = [
+  { arg = "arch", default = "default" },
+  { arg = "extras", default = "" },
+  { arg = "petsc_opts", default = "" },
+]
+cmd = "bash scripts/build-petsc.sh {{ arch }} {{ extras }} {{ petsc_opts }}"
+depends-on = ["clone-petsc"]
+
+[feature.firedrake-build.tasks.install-firedrake]
+args = [
+  { arg = "arch", default = "default" },
+  { arg = "extras", default = "" },
+  { arg = "petsc_opts", default = "" },
+]
+cmd = "bash scripts/install-firedrake.sh {{ arch }} {{ extras }}"
+depends-on = [
+  {task = "build-petsc", args = ["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]},
+]
+
+[feature.firedrake-build.tasks.setup]
+args = [
+  { arg = "arch", default = "default" },
+  { arg = "extras", default = "" },
+  { arg = "petsc_opts", default = "" },
+]
+depends-on = [
+  {task= "install-firedrake", args=["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]}
+]
+
+[feature.firedrake-build.activation]
+scripts = ["scripts/activate.sh"]
+
+# Default environment includes firedrake-build
+[environments]
+default = { features = ["firedrake-build"], solve-group = "default" }
