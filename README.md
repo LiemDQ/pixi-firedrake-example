@@ -39,9 +39,14 @@ Or modify `pixi.toml` directly:
 
 ```toml
 [dependencies]
-numpy = ...      # Add project deps here
-matplotlib = ...
+numpy = #...      # Add project deps here
+matplotlib = #...
 ```
+## Pixi tasks
+
+* `setup`: Sets up Firedrake. See section below for possible arguments.
+* `check`: Runs firedrake-check.
+* `get-configure`: Downloads the `firedrake-configure` script. 
 
 ## Build customization
 
@@ -56,6 +61,12 @@ pixi run setup arch extras petsc_opts
 * `petsc_opts` is a list of compiler flags for PETSc compilation. Must be provided as a string of flags. 
 
 As of version 0.62.0, Pixi's task CLI functionality is fairly basic, and it isn't possible to skip arguments or provide them as flags. If you have a specific and complex build in mind, it may be preferable to directly modify the shell scripts found in `scripts/`.
+
+## A note on dependencies
+
+When `pixi run setup` is executed, all of the dependencies specified by `pixi.toml` will be installed first, and pip in the environment has knowledge of all the packages installed by Pixi (from Conda or PyPi). However, because Firedrake is installed with pip as part of a task, it will not appear in the Pixi lockfile nor will it be resolved by Pixi's SAT solver. Thus, any downstream packages that use Firedrake as a dependency also need to be added in `install-firedrake.sh` or the dependencies may not resolve correctly. 
+
+However, as long as you do this the environment should be reproducible.
 
 ## Why Pixi?
 
