@@ -1,19 +1,15 @@
 #!/bin/bash
 set -e
 
-# Configuration from environment (set by pixi task)
-ARCH_TYPE="$1"
-EXTRAS="$2" 
+# Firedrake extras, comma-separated
+EXTRAS="$1"
 
-# Determine and export PETSC_ARCH before sourcing activate.sh
-if [ "$ARCH_TYPE" = "complex" ]; then
-    export PETSC_ARCH="arch-firedrake-complex"
-else
-    export PETSC_ARCH="arch-firedrake-default"
-fi
+# PETSC_ARCH is set by the pixi task (see `env` in pixi.toml)
+: "${PETSC_ARCH:?PETSC_ARCH must be set; run this via 'pixi run setup'}"
 
-# Re-source activate.sh to pick up correct HDF5_DIR, LD_LIBRARY_PATH, etc.
-# (activate.sh respects pre-set PETSC_ARCH and won't override it)
+# Pixi ran activate.sh before the task's PETSC_ARCH was applied, so HDF5_DIR,
+# LD_LIBRARY_PATH, etc. may point at a different arch. Re-source it to
+# recompute them (activate.sh respects a pre-set PETSC_ARCH).
 source "$(dirname "$0")/activate.sh"
 
 # Build the extras string for pip

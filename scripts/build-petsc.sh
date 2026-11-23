@@ -10,12 +10,12 @@ FIREDRAKE_EXTRAS="$2"
 # Additional PETSc configuration flags.
 PETSC_EXTRAS="$3"
 
-# Determine PETSC_ARCH based on arch type
+# PETSC_ARCH is set by the pixi task (see `env` in pixi.toml)
+: "${PETSC_ARCH:?PETSC_ARCH must be set; run this via 'pixi run setup'}"
+
 if [ "$ARCH_TYPE" = "complex" ]; then
-    PETSC_ARCH="arch-firedrake-complex"
     ARCH_FLAG="--arch complex"
 else
-    PETSC_ARCH="arch-firedrake-default"
     ARCH_FLAG=""
 fi
 

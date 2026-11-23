@@ -3,6 +3,8 @@
 name = "pixi-firedrake-example"
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64"]
+# Lock file is format v7 (pixi >= 0.68); 0.84 changed lock-file hashes.
+requires-pixi = ">=0.84"
 
 # Base dependencies (always included)
 [dependencies]
@@ -38,27 +40,31 @@ check = "firedrake-check"
 
 [feature.firedrake-build.tasks._build-petsc]
 args = [
-  { arg = "arch", default = "default" },
+  { arg = "arch", default = "default", choices = ["default", "complex"] },
   { arg = "extras", default = "" },
   { arg = "petsc_opts", default = "" },
 ]
 cmd = "bash scripts/build-petsc.sh {{ arch }} \"{{ extras }}\" \"{{ petsc_opts }}\""
+# Overrides the PETSC_ARCH auto-detected by scripts/activate.sh.
+env = { PETSC_ARCH = "arch-firedrake-{{ arch }}" }
 depends-on = ["_clone-petsc"]
 
 [feature.firedrake-build.tasks._install-firedrake]
 args = [
-  { arg = "arch", default = "default" },
+  { arg = "arch", default = "default", choices = ["default", "complex"] },
   { arg = "extras", default = "" },
   { arg = "petsc_opts", default = "" },
 ]
-cmd = "bash scripts/install-firedrake.sh {{ arch }} \"{{ extras }}\""
+cmd = "bash scripts/install-firedrake.sh \"{{ extras }}\""
+# Overrides the PETSC_ARCH auto-detected by scripts/activate.sh.
+env = { PETSC_ARCH = "arch-firedrake-{{ arch }}" }
 depends-on = [
   {task = "_build-petsc", args = ["{{ arch }}", "{{ extras }}", "{{ petsc_opts }}"]},
 ]
 
 [feature.firedrake-build.tasks.setup]
 args = [
-  { arg = "arch", default = "default" },
+  { arg = "arch", default = "default", choices = ["default", "complex"] },
   { arg = "extras", default = "" },
   { arg = "petsc_opts", default = "" },
 ]
@@ -68,6 +74,21 @@ depends-on = [
 
 [feature.firedrake-build.activation]
 scripts = ["scripts/activate.sh"]
+
+# Static variables. Anything that depends on PETSC_ARCH is set in
+# scripts/activate.sh instead.
+[feature.firedrake-build.activation.env]
+PETSC_DIR = "$CONDA_PREFIX/petsc"
+# MPI compiler wrappers
+CC = "mpicc"
+CXX = "mpicxx"
+# Build h5py against PETSc's parallel HDF5
+HDF5_MPI = "ON"
+# PyOP2 JIT compilation flags. PyOP2's `sniff_compiler` doesn't recognise the
+# Conda compiler version strings (arch-conda-os-*) and falls back to
+# AnonymousCompiler, which doesn't set these.
+PYOP2_CFLAGS = "-fPIC"
+PYOP2_LDFLAGS = "-shared"
 
 # Default environment includes firedrake-build
 [environments]
