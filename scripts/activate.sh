@@ -1,9 +1,13 @@
 #!/bin/bash
 
-# PETSc configuration
+# Variables that depend on PETSC_ARCH. Static variables (CC, CXX, HDF5_MPI,
+# PYOP2_*) are set in pixi.toml under [feature.firedrake-build.activation.env].
+
+# Not relying on PETSC_DIR from pixi.toml here: this script is also sourced
+# directly by scripts/install-firedrake.sh.
 export PETSC_DIR="$CONDA_PREFIX/petsc"
 
-# Auto-detect PETSC_ARCH only if not already set (allows override by build scripts)
+# Auto-detect PETSC_ARCH only if not already set (the build tasks set it)
 if [ -z "$PETSC_ARCH" ]; then
     if [ -d "$PETSC_DIR/arch-firedrake-complex" ]; then
         export PETSC_ARCH="arch-firedrake-complex"
@@ -17,21 +21,9 @@ if [ -e "$PETSC_DIR/$PETSC_ARCH/lib/libslepc.so" ] || [ -e "$PETSC_DIR/$PETSC_AR
     export SLEPC_DIR="$PETSC_DIR/$PETSC_ARCH"
 fi
 
-# MPI compiler wrappers
-export CC=mpicc
-export CXX=mpicxx
-
-# HDF5 MPI support - point to PETSc's built HDF5
-export HDF5_MPI="ON"
+# Point to PETSc's built HDF5
 export HDF5_DIR="$PETSC_DIR/$PETSC_ARCH"
 
 # Ensure libraries are found at runtime
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$PETSC_DIR/$PETSC_ARCH/lib:${LD_LIBRARY_PATH:-}"
 export PKG_CONFIG_PATH="$CONDA_PREFIX/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-
-# PyOP2 compilation flags. For JIT kernel compilation, PyOP2 uses the `sniff_compiler` function 
-# to detect the compiler version and set flags accordingly. However Conda compiler versions typically start with
-# arch-conda-os-* which PyOP2 doesn't expect, and it defaults to AnonymousCompiler which doesn't provide the right flags.  
-# So we need to manually set -shared and -fPIC.
-export PYOP2_CFLAGS="-fPIC"
-export PYOP2_LDFLAGS="-shared"
