@@ -60,7 +60,6 @@ pixi run setup arch extras petsc_opts
 * `extras` is for additional Firedrake dependencies like slepc, vtk, jax. Must be provided as a quotation mark delineated string of comma-separated variables: `"vtk,jax,slepc,..."`
 * `petsc_opts` is a list of compiler flags for PETSc compilation. Must be provided as a string of flags. 
 
-As of version 0.62.0, Pixi's task CLI functionality is fairly basic, and it isn't possible to skip arguments or provide them as flags. If you have a specific and complex build in mind, it may be preferable to directly modify the shell scripts found in `scripts/`.
 
 ## A note on dependencies
 
